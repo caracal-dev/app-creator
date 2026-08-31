@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=App Creator
+GenericName=AppImage Converter
+Comment=Convert .deb and .rpm packages into portable AppImages
+Exec=app-creator
+TryExec=app-creator
+Icon=app-creator
+Terminal=false
+StartupNotify=true
+Categories=Utility;Development;Packaging;
+Keywords=appimage;convert;deb;rpm;package;

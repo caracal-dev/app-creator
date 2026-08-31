@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>App Creator</title>
+    <link rel="stylesheet" href="/main.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="creator-card">
+        <div class="brand-row">
+          <img class="brand-mark" src="/assets/images/caracal.png" alt="Caracal logo" />
+          <div>
+            <p class="eyebrow">Caracal OS</p>
+            <h1>App Creator</h1>
+          </div>
+        </div>
+
+        <section class="hero-panel">
+          <div>
+            <p class="eyebrow">Step 1</p>
+            <h2>Convert packages to AppImages.</h2>
+            <p class="hero-copy">
+              Select a <code>.deb</code> or <code>.rpm</code> package file and convert it into
+              a standalone AppImage. The tool extracts the application, discovers metadata,
+              and builds a portable package using <code>appimagetool</code>.
+            </p>
+          </div>
+          <div class="hero-status">
+            <span id="status-pill" class="status-badge neutral">Ready</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Input</p>
+              <h3>Package File</h3>
+            </div>
+          </div>
+
+          <div class="file-drop">
+            <div class="drop-row">
+              <button id="pick-file-button" class="primary-button" type="button">Browse Package</button>
+              <span id="selected-file" class="selected-file">No file selected</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Options</p>
+              <h3>Application Details</h3>
+            </div>
+          </div>
+
+          <div class="options-grid">
+            <div class="icon-upload">
+              <div id="icon-preview" class="icon-preview">
+                <img id="icon-image" class="icon-image" src="" alt="App icon" />
+                <span id="icon-label" class="icon-label">Default icon</span>
+              </div>
+              <button id="pick-icon-button" class="ghost-button" type="button">Change Icon</button>
+            </div>
+
+            <div class="name-field">
+              <label class="field">
+                <span>App Name</span>
+                <input id="app-name-input" type="text" placeholder="Auto-detect from package" />
+              </label>
+              <p class="field-hint">Leave empty to auto-detect from the package metadata.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="action-row">
+            <button id="convert-button" class="primary-button" type="button" disabled>Convert to AppImage</button>
+          </div>
+        </section>
+
+        <section id="progress-section" class="panel is-hidden">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Progress</p>
+              <h3>Conversion</h3>
+            </div>
+            <span id="progress-state" class="status-badge neutral">Idle</span>
+          </div>
+          <div id="progress-detail" class="progress-detail">Waiting to start...</div>
+        </section>
+
+        <section id="result-section" class="panel is-hidden">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Result</p>
+              <h3>AppImage Created</h3>
+            </div>
+          </div>
+          <div id="result-body" class="result-body"></div>
+          <div class="action-row">
+            <button id="clear-button" class="ghost-button" type="button">Convert Another</button>
+          </div>
+        </section>
+
+        <section id="error-section" class="panel error-panel is-hidden">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Error</p>
+              <h3>Conversion Failed</h3>
+            </div>
+          </div>
+          <pre id="error-detail" class="error-detail"></pre>
+          <div class="action-row">
+            <button id="retry-button" class="primary-button" type="button">Try Again</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/main.js"></script>
+  </body>
+</html>
