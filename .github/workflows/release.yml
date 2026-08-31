@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:43
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install release dependencies
+        run: |
+          set -euo pipefail
+          dnf -y install \
+            curl \
+            gcc \
+            git \
+            glib2-devel \
+            gtk3-devel \
+            nodejs \
+            npm \
+            pkgconf-pkg-config \
+            tar \
+            webkit2gtk4.1-devel
+          dnf clean all
+
+      - name: Install Go 1.26.4
+        run: |
+          set -euo pipefail
+          curl -fsSL https://go.dev/dl/go1.26.4.linux-amd64.tar.gz -o /tmp/go.tar.gz
+          rm -rf /usr/local/go
+          tar -C /usr/local -xzf /tmp/go.tar.gz
+          rm -f /tmp/go.tar.gz
+          echo "/usr/local/go/bin" >> "${GITHUB_PATH}"
+          /usr/local/go/bin/go version
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+
+          latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [[ -n "${latest_tag}" ]]; then
+            echo "LATEST_TAG=${latest_tag}" >> "${GITHUB_ENV}"
+          fi
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" && "${GITHUB_REF_NAME:-}" == v* ]]; then
+            version="${GITHUB_REF_NAME}"
+          elif [[ -n "${latest_tag}" ]]; then
+            version="${latest_tag}"
+          else
+            version="manual"
+          fi
+
+          echo "RELEASE_VERSION=${version}" >> "${GITHUB_ENV}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Vendor Go modules
+        run: go mod vendor
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build frontend
+        run: |
+          set -euo pipefail
+          cd frontend
+          npm install --ignore-scripts
+          npm run build
+          cd ..
+
+      - name: Build release package
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          APP_NAME="app-creator"
+          STAGING_DIR="dist/${APP_NAME}-${VERSION}-linux-amd64"
+          ARCHIVE_PATH="dist/${APP_NAME}-${VERSION}-linux-amd64.tar.gz"
+
+          rm -rf dist
+          install -d \
+            "${STAGING_DIR}/usr/bin" \
+            "${STAGING_DIR}/usr/share/app-creator/dist" \
+            "${STAGING_DIR}/usr/share/applications"
+
+          go build -trimpath -mod=vendor -tags="desktop,production,webkit2_41" -ldflags="-s -w" \
+            -o "${STAGING_DIR}/usr/bin/${APP_NAME}" .
+
+          cp -R frontend/dist/index.html \
+            frontend/dist/main.css \
+            frontend/dist/main.js \
+            "${STAGING_DIR}/usr/share/app-creator/dist/"
+          cp -R frontend/dist/wailsjs "${STAGING_DIR}/usr/share/app-creator/dist/" 2>/dev/null || true
+          cp -R frontend/dist/assets "${STAGING_DIR}/usr/share/app-creator/dist/" 2>/dev/null || true
+          cp packaging/app-creator.desktop "${STAGING_DIR}/usr/share/applications/"
+          cp -R build/appicon.png "${STAGING_DIR}/usr/share/pixmaps/" 2>/dev/null || true
+          cp README.md LICENSE "${STAGING_DIR}/"
+
+          tar -C dist -czf "${ARCHIVE_PATH}" "$(basename "${STAGING_DIR}")"
+          sha256sum "${ARCHIVE_PATH}" > "${ARCHIVE_PATH}.sha256"
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+          generate_release_notes: true
