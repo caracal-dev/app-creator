@@ -1,6 +1,6 @@
 %global debug_package %{nil}
 %undefine _disable_source_fetch
-%global upstream_version %{?version_override}%{!?version_override:0.2.1}
+%global upstream_version %{?version_override}%{!?version_override:0.2.2}
 %global github_owner %{?github_owner_override}%{!?github_owner_override:caracal-dev}
 %global github_repo %{?github_repo_override}%{!?github_repo_override:app-creator}
 %global source_tag %{?source_tag_override}%{!?source_tag_override:v%{upstream_version}}
@@ -16,6 +16,8 @@ Requires:  binutils
 Requires:  cpio
 Requires:  rpm-build
 BuildRequires:  golang >= 1.21
+URL:            https://github.com/%{github_owner}/%{github_repo}
+Source0:        %{url}/archive/refs/tags/%{source_tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  glib2-devel
 BuildRequires:  gtk3-devel
 BuildRequires:  pkgconf-pkg-config
