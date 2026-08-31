@@ -1,6 +1,6 @@
 %global debug_package %{nil}
 %undefine _disable_source_fetch
-%global upstream_version %{?version_override}%{!?version_override:0.2.2}
+%global upstream_version %{?version_override}%{!?version_override:0.2.3}
 %global github_owner %{?github_owner_override}%{!?github_owner_override:caracal-dev}
 %global github_repo %{?github_repo_override}%{!?github_repo_override:app-creator}
 %global source_tag %{?source_tag_override}%{!?source_tag_override:v%{upstream_version}}
@@ -60,18 +60,18 @@ install -d %{buildroot}%{_datadir}/pixmaps
 
 install -pm0755 build/app-creator %{buildroot}%{_bindir}/app-creator
 cp -a frontend/dist %{buildroot}%{_datadir}/app-creator/
-cp -a assets %{buildroot}%{_datadir}/app-creator/ 2>/dev/null || true
 install -Dpm0644 packaging/app-creator.desktop %{buildroot}%{_datadir}/applications/app-creator.desktop
+install -Dpm0644 build/appicon.png %{buildroot}%{_datadir}/pixmaps/app-creator.png 2>/dev/null || true
 
 %files
 %license LICENSE
 %doc README.md
 %{_bindir}/app-creator
+%dir %{_datadir}/app-creator/dist/
 %{_datadir}/app-creator/dist/index.html
 %{_datadir}/app-creator/dist/main.css
 %{_datadir}/app-creator/dist/main.js
-%{_datadir}/app-creator/dist/wailsjs/**
-%{_datadir}/app-creator/assets/**
+%{_datadir}/app-creator/dist/assets/
 %{_datadir}/applications/app-creator.desktop
 
 %changelog
