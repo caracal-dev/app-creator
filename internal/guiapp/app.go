@@ -1,10 +1,10 @@
 package guiapp
-
 import (
 	"bufio"
 	"context"
 	_ "embed"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -212,7 +212,7 @@ func (a *App) emit(id, title, state, msg string) {
 }
 
 func fail(msg string) (ConvertResult, error) {
-	return ConvertResult{Success: false, Error: msg}, fmt.Errorf(msg)
+	return ConvertResult{Success: false, Error: msg}, errors.New(msg)
 }
 
 // resolveTool looks for a binary in PATH or common locations.
