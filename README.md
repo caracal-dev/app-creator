@@ -36,6 +36,41 @@ App Creator provides a simple interface to:
 ./scripts/wails-dev.sh
 ```
 
+## Limitations
+
+The converter makes a best-effort attempt to discover application metadata and
+structure, but not every `.deb` or `.rpm` produces a working AppImage:
+
+- **Debian maintainer scripts** (`preinst`, `postinst`, `prerm`, `postrm`) are
+  not executed. Packages that depend on setup-time configuration (service
+  registration, user creation, debconf prompts) will be broken.
+
+- **Dependencies are not bundled.** The converter copies only what is inside
+  the package file. If the application depends on shared libraries, interpreters,
+  or runtimes not included in the package itself (`libc`, `glib`, `dotnet`,
+  `mono`, `python`, `java`, etc.), it will fail at runtime.
+
+- **RPM trigger scripts** (`triggerpostin`, `triggerun`) are not executed. The
+  package state after extraction may differ from an installed system.
+
+- **Absolute symlinks** inside the package (e.g. `/usr/lib → /usr/lib64`) point
+  into the host filesystem and will break inside the AppDir.
+
+- **`/opt/`-based applications** are supported but the converter picks the
+  first executable it finds inside the first `opt/` subdirectory. Large
+  multi-binary suites (e.g. an IDE with launcher, cli, and backend daemon) may
+  result in a wrong `Exec` line. Verify the generated `.desktop` file if the
+  AppImage launches the wrong binary.
+
+- **Systemd units, D-Bus services, and polkit policies** shipped in the package
+  are extracted but not registered. Features relying on these will not work in
+  the AppImage sandbox.
+
+- **Metadata fallback.** If the package contains no `.desktop` file and no
+  AppStream metadata, the converter guesses the app name from the filename and
+  uses a generic `Utility` category. These AppImages will lack a proper
+  launcher icon in desktop environments.
+
 ## License
 
 MIT

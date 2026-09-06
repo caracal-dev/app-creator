@@ -9,10 +9,14 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
 )
 
 //go:embed all:frontend/dist
 var embeddedFrontend embed.FS
+
+//go:embed icon.png
+var appIcon []byte
 
 func main() {
 	frontend, err := fs.Sub(embeddedFrontend, "frontend/dist")
@@ -34,6 +38,9 @@ func main() {
 		OnStartup: app.Startup,
 		Bind: []interface{}{
 			app,
+		},
+		Linux: &linux.Options{
+			Icon: appIcon,
 		},
 	}); err != nil {
 		log.Fatal(err)

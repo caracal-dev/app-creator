@@ -60,7 +60,9 @@ install -d %{buildroot}%{_datadir}/pixmaps
 install -pm0755 build/app-creator %{buildroot}%{_bindir}/app-creator
 cp -a frontend/dist %{buildroot}%{_datadir}/app-creator/
 install -Dpm0644 packaging/app-creator.desktop %{buildroot}%{_datadir}/applications/app-creator.desktop
-install -Dpm0644 build/appicon.png %{buildroot}%{_datadir}/pixmaps/app-creator.png 2>/dev/null || true
+install -Dpm0644 packaging/app-creator.png %{buildroot}%{_datadir}/icons/hicolor/128x128/apps/app-creator.png
+install -Dpm0644 packaging/app-creator.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/app-creator.svg
+install -Dpm0644 packaging/app-creator.png %{buildroot}%{_datadir}/pixmaps/app-creator.png
 
 %files
 %license LICENSE
@@ -72,6 +74,9 @@ install -Dpm0644 build/appicon.png %{buildroot}%{_datadir}/pixmaps/app-creator.p
 %{_datadir}/app-creator/dist/main.js
 %{_datadir}/app-creator/dist/assets/
 %{_datadir}/applications/app-creator.desktop
+%{_datadir}/icons/hicolor/128x128/apps/app-creator.png
+%{_datadir}/icons/hicolor/scalable/apps/app-creator.svg
+%{_datadir}/pixmaps/app-creator.png
 
 %changelog
 * Sun Aug 31 2026 Atumia <atumia@users.noreply.github.com> - %{version}-%{release}

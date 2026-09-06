@@ -169,7 +169,7 @@ func (a *App) ConvertPackage(req ConvertRequest) (ConvertResult, error) {
 
 	outDir := filepath.Dir(req.PackagePath)
 	appImagePath := filepath.Join(outDir, fmt.Sprintf("%s-%s-x86_64.AppImage", appName, meta.Version))
-	cmd := exec.Command(appimgTool, appDir, appImagePath)
+	cmd := exec.Command(appimgTool, "--no-appstream", appDir, appImagePath)
 	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -404,6 +404,53 @@ func discoverMetadata(extractDir, pkgPath string) (*appMetadata, error) {
 			meta.Executable = filepath.Join("usr", "bin", entries[0].Name())
 		}
 	}
+	// Also check opt/ for apps installed there (e.g. Electron, .NET apps)
+	if meta.Executable == "" {
+		optDir := filepath.Join(extractDir, "opt")
+		entries, err := os.ReadDir(optDir)
+		if err == nil {
+			// Prefer direct executable files in opt/
+			for _, e := range entries {
+				if e.IsDir() {
+					continue
+				}
+				info, err := e.Info()
+				if err != nil {
+					continue
+				}
+				if info.Mode().IsRegular() && info.Mode().Perm()&0o111 != 0 {
+					meta.Executable = filepath.Join("opt", e.Name())
+					break
+				}
+			}
+			// Fallback: first executable inside the first subdirectory
+			if meta.Executable == "" {
+				for _, e := range entries {
+					if !e.IsDir() {
+						continue
+					}
+					subDir := filepath.Join(optDir, e.Name())
+					subEntries, err := os.ReadDir(subDir)
+					if err != nil {
+						continue
+					}
+					for _, se := range subEntries {
+						info, err := se.Info()
+						if err != nil {
+							continue
+						}
+						if info.Mode().IsRegular() && info.Mode().Perm()&0o111 != 0 {
+							meta.Executable = filepath.Join("opt", e.Name(), se.Name())
+							break
+						}
+					}
+					if meta.Executable != "" {
+						break
+					}
+				}
+			}
+		}
+	}
 
 	return meta, nil
 }
@@ -601,7 +648,9 @@ func buildDesktopEntry(meta *appMetadata, appName string) string {
 		execPath = appName
 	}
 	// If exec is in usr/bin, make it relative to AppDir
-	if !strings.HasPrefix(execPath, "/") {
+	if strings.HasPrefix(execPath, "/") {
+		execPath = strings.TrimPrefix(execPath, "/")
+	} else if !strings.HasPrefix(execPath, "usr/") && !strings.HasPrefix(execPath, "opt/") {
 		execPath = filepath.Join("usr", "bin", execPath)
 	}
 
@@ -636,7 +685,12 @@ func buildAppRun(meta *appMetadata, appName string) string {
 	if strings.HasPrefix(execPath, "/") {
 		execPath = "." + execPath
 	} else if !strings.HasPrefix(execPath, ".") {
-		execPath = filepath.Join("./usr", "bin", execPath)
+		// Check if it already starts with a known AppDir top-level directory
+		if strings.HasPrefix(execPath, "opt/") || strings.HasPrefix(execPath, "usr/") {
+			// Already relative to AppDir root
+		} else {
+			execPath = filepath.Join("./usr", "bin", execPath)
+		}
 	}
 
 	return fmt.Sprintf(`#!/bin/bash
